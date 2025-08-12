@@ -1,0 +1,7 @@
+langchain
+langchain-gradient
+langchain-community
+python-dotenv
+pypdf
+fastapi
+jupyter
