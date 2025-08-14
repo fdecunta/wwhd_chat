@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-
-import llm_model 
+from llm_model import ask_hamming
 
 app = FastAPI()
 
@@ -10,4 +9,4 @@ def root_controller():
 
 @app.get("/chat")
 def ask_hamming(msg: str) -> str:
-    return llm_model.ask_hamming(msg)
+    return ask_hamming(msg)

@@ -1,8 +1,4 @@
-langchain
-langchain-gradient
-langchain-community
 python-dotenv
-pypdf
 fastapi[standard]
 streamlit
-requests
+litellm

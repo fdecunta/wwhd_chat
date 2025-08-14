@@ -1,25 +1,12 @@
 from dotenv import load_dotenv
-from langchain_gradient import ChatGradient
-from langchain_core.documents.base import Blob
-from langchain_community.document_loaders.parsers import PyPDFParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 import os
+import litellm
 
 load_dotenv()
-PDF_PATH = "./YouAndYourResearch.pdf"
 
-def load_talk(PDF_PATH):
-    """Load Hamming's talk"""
-    blob = Blob.from_path(PDF_PATH)
-    parser = PyPDFParser(mode = "single")
-    
-    docs = []
-    docs_lazy = parser.lazy_parse(blob)
-    for doc in docs_lazy:
-        docs.append(doc)
-    
-    return(docs[0].page_content)
+TALK_PATH = "./YouAndYourResearch.txt"
+with open(TALK_PATH, 'r') as f:
+    full_talk = f.read()
 
 prompt_template = """
 You are an assistant that talks like if you were Richard Hamming. 
@@ -33,33 +20,21 @@ Follow this guidelines:
 - Don't go out of character.
 - Be provocative 
 
-Full talk: {talk}
-
-Question: {question}
+Here is the full talk: \\n
 """
 
+system_msg = prompt_template + full_talk
 
-def init_chatbot(prompt_template):
-    prompt = PromptTemplate.from_template(prompt_template)
-    llm = ChatGradient(
-            model="llama3.3-70b-instruct",
-            api_key=os.getenv('DIGITALOCEAN_INFERENCE_KEY'),
-             max_tokens=6000
-    )
-    parser = StrOutputParser()
-    chain = prompt | llm | parser
-
-    return chain
-
-
-def ask_hamming(msg: str) -> str:
-    full_talk = load_talk(PDF_PATH)
-    chain = init_chatbot(prompt_template)
-
-    prompt_input = {
-        "talk": full_talk,
-        "question": msg
-    }
-
-    response = chain.invoke(prompt_input)
-    return response
+def ask_hamming(msg):
+    messages = [
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": msg},
+    ]
+    
+    response = litellm.completion(
+        model="gradient_ai/llama3.3-70b-instruct",
+        api_key=os.environ["DIGITALOCEAN_INFERENCE_KEY"],
+        messages=messages,
+    ) 
+    
+    return response.choices[0].message.content
